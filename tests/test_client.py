@@ -1,0 +1,103 @@
+import unittest
+from unittest.mock import Mock, patch
+
+import requests
+from pydantic import ValidationError
+
+from src.llm_client.client import ChatCompletionResponse, LLMClient, Message
+
+# --- Tests für den LLMClient ---
+
+class TestLLMClient(unittest.TestCase):
+
+    def setUp(self):
+        """Richtet den Test-Client vor jedem Test ein."""
+        self.client = LLMClient(base_url="https://api.test.com", api_key="test_key")
+
+    @patch('requests.post')
+    def test_get_completion_success(self, mock_post):
+        """Testet einen erfolgreichen Aufruf zur Chat-Vervollständigung."""
+        # Konfigurieren der simulierten Antwort
+        mock_response_data = {
+            "id": "chatcmpl-test",
+            "object": "chat.completion",
+            "created": 1677652288,
+            "model": "gpt-3.5-turbo-0613",
+            "choices": [{
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "Dies ist eine Testantwort.",
+                }
+            }]
+        }
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_response_data
+        mock_response.raise_for_status.return_value = None # Simuliert eine erfolgreiche Anfrage
+        mock_post.return_value = mock_response
+
+        # Aufruf der zu testenden Methode
+        messages = [Message(role= "user", content= "Hallo")]
+        completion = self.client.get_completion(model="gpt-3.5-turbo", messages=messages)
+
+        # Überprüfungen (Assertions)
+        self.assertIsInstance(completion, ChatCompletionResponse)
+        self.assertEqual(completion.id, "chatcmpl-test")
+        self.assertEqual(completion.choices[0].message.content, "Dies ist eine Testantwort.")
+        mock_post.assert_called_once()
+
+
+    @patch('requests.post')
+    def test_get_completion_http_error(self, mock_post):
+        """Testet die Behandlung eines HTTP-Fehlers."""
+        # Konfigurieren des Mocks, um einen HTTPError auszulösen
+        mock_response = Mock()
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("404 Not Found")
+        mock_post.return_value = mock_response
+
+        # Überprüfen, ob die richtige Ausnahme ausgelöst wird
+        with self.assertRaises(requests.exceptions.RequestException):
+            messages = [Message(role= "user", content= "Hallo")]
+            self.client.get_completion(model="gpt-3.5-turbo", messages=messages)
+
+    @patch('requests.post')
+    def test_get_completion_response_validation_error(self, mock_post):
+        """Testet die Behandlung einer ungültigen Antwort von der API."""
+        # Konfigurieren der simulierten Antwort mit fehlenden Feldern
+        mock_invalid_response_data = {
+            "id": "chatcmpl-test",
+            "object": "chat.completion",
+            # Das Feld "created" fehlt
+            "model": "gpt-3.5-turbo-0613",
+            "choices": [{
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    # "content" fehlt
+                }
+            }]
+        }
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_invalid_response_data
+        mock_response.raise_for_status.return_value = None
+        mock_post.return_value = mock_response
+
+        # Überprüfen, ob ein ValidationError ausgelöst wird
+        with self.assertRaises(ValidationError):
+            messages = [Message(role= "user", content= "Hallo")]
+            self.client.get_completion(model="gpt-3.5-turbo", messages=messages)
+            
+    def test_get_completion_request_validation_error(self):
+        """Testet die Behandlung von ungültigen Eingabedaten für die Anfrage."""
+        # Aufruf der Methode mit ungültigem Nachrichtenformat
+        with self.assertRaises(ValidationError):
+            invalid_messages = Message(role= "user", content= "Hallo")
+            self.client.get_completion(model="gpt-3.5-turbo", messages=invalid_messages)
+
+
+if __name__ == '__main__':
+    # Führt die Tests aus, wenn das Skript direkt gestartet wird.
+    # Die zusätzlichen Argumente sind für Umgebungen wie Jupyter Notebooks nützlich.
+    unittest.main(argv=['first-arg-is-ignored'], exit=False)
