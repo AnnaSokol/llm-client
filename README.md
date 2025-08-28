@@ -1,9 +1,5 @@
 # llm-client
 
-[![Release](https://img.shields.io/github/v/release/Nikolaikl/llm-client)](https://img.shields.io/github/v/release/Nikolaikl/llm-client)
-[![Build status](https://img.shields.io/github/actions/workflow/status/Nikolaikl/llm-client/main.yml?branch=main)](https://github.com/Nikolaikl/llm-client/actions/workflows/main.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/Nikolaikl/llm-client/branch/main/graph/badge.svg)](https://codecov.io/gh/Nikolaikl/llm-client)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/Nikolaikl/llm-client)](https://img.shields.io/github/commit-activity/m/Nikolaikl/llm-client)
 [![License](https://img.shields.io/github/license/Nikolaikl/llm-client)](https://img.shields.io/github/license/Nikolaikl/llm-client)
 
 This is a template repository for Python projects that use uv for their dependency management.
@@ -55,15 +51,3 @@ git push origin main
 
 You are now ready to start development on your project!
 The CI/CD pipeline will be triggered when you open a pull request, merge to main, or when you create a new release.
-
-To finalize the set-up for publishing to PyPI, see [here](https://fpgmaas.github.io/cookiecutter-uv/features/publishing/#set-up-for-pypi).
-For activating the automatic documentation with MkDocs, see [here](https://fpgmaas.github.io/cookiecutter-uv/features/mkdocs/#enabling-the-documentation-on-github).
-To enable the code coverage reports, see [here](https://fpgmaas.github.io/cookiecutter-uv/features/codecov/).
-
-## Releasing a new version
-
-
-
----
-
-Repository initiated with [fpgmaas/cookiecutter-uv](https://github.com/fpgmaas/cookiecutter-uv).
