@@ -127,10 +127,10 @@ class LLMClient:
         try:
             # Validate the request data before sending
             request_data = ChatCompletionRequest(model=model, messages=messages)
-            payload = request_data.model_dump_json()
+            payload = request_data.model_dump()
 
             # Make the API call
-            response = requests.post(url, headers=self.headers, data=payload, timeout=200)
+            response = requests.post(url, headers=self.headers, json=payload, timeout=200)
             response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
 
             # Validate the response data
