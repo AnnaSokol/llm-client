@@ -1,5 +1,3 @@
-import json
-
 import requests
 from pydantic import BaseModel, ValidationError
 
@@ -132,7 +130,7 @@ class LLMClient:
             payload = request_data.model_dump_json()
 
             # Make the API call
-            response = requests.post(url, headers=self.headers, data=payload)
+            response = requests.post(url, headers=self.headers, data=payload, timeout=200)
             response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
 
             # Validate the response data
@@ -145,66 +143,3 @@ class LLMClient:
         except requests.exceptions.RequestException as e:
             print(f"HTTP request failed: {e}")
             raise
-
-
-# --- 4. Example Usage ---
-
-if __name__ == "__main__":
-    # This is a mock server for demonstration purposes.
-    # In a real scenario, you would replace this with the actual API URL.
-    import threading
-    from http.server import BaseHTTPRequestHandler, HTTPServer
-
-    class MockServer(BaseHTTPRequestHandler):
-        def do_POST(self):
-            if self.path == "/v1/chat/completions":
-                self.send_response(200)
-                self.send_header("Content-type", "application/json")
-                self.end_headers()
-                response = {
-                    "id": "chatcmpl-123",
-                    "object": "chat.completion",
-                    "created": 1677652288,
-                    "model": "gpt-3.5-turbo-0613",
-                    "choices": [
-                        {
-                            "index": 0,
-                            "message": {
-                                "role": "assistant",
-                                "content": "Hello there! How can I assist you today?",
-                            },
-                        }
-                    ],
-                }
-                self.wfile.write(json.dumps(response).encode("utf-8"))
-            else:
-                self.send_response(404)
-                self.end_headers()
-
-    def run_mock_server():
-        server_address = ("", 8000)
-        httpd = HTTPServer(server_address, MockServer)
-        httpd.serve_forever()
-
-    # Run the mock server in a separate thread
-    server_thread = threading.Thread(target=run_mock_server)
-    server_thread.daemon = True
-    server_thread.start()
-
-    # --- Client in action ---
-    client = LLMClient(base_url="http://localhost:8000", api_key="YOUR_API_KEY")
-
-    messages_to_send = [
-        Message(role="system", content="you are a helpful assistant"),
-        Message(role="user", content="what is the meaning of life ?"),
-    ]
-
-    try:
-        completion = client.get_completion(model="gpt-3.5-turbo", messages=messages_to_send)
-        print("Successfully received completion:")
-        print(f"  Response ID: {completion.id}")
-        print(f"  Model used: {completion.model}")
-        print(f"  Assistant's reply: {completion.choices[0].message.content}")
-
-    except (ValidationError, requests.exceptions.RequestException) as e:
-        print(f"An error occurred: {e}")
