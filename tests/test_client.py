@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 
 import requests
 from dotenv import load_dotenv
-from pydantic import ValidationError
 
 from llm_client.client import ChatCompletionResponse, LLMClient, Message
 
